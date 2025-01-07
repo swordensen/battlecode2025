@@ -6,28 +6,19 @@ import player_one.Utils;
 import static player_one.Utils.rng;
 
 public class Tower {
+
+    static UnitType SPAWN_TYPE = UnitType.SOLDIER;
     /**
      * Run a single turn for towers.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
     public static void run(RobotController rc) throws GameActionException {
-        // Pick a direction to build in.
-        Direction dir = Utils.directions[rng.nextInt(Utils.directions.length)];
-        MapLocation nextLoc = rc.getLocation().add(dir);
-        // Pick a random robot type to build.
-        int robotType = rng.nextInt(3);
-        if (robotType == 0 && rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){
-            rc.buildRobot(UnitType.SOLDIER, nextLoc);
-            System.out.println("BUILT A SOLDIER");
-        }
-        else if (robotType == 1 && rc.canBuildRobot(UnitType.MOPPER, nextLoc)){
-            rc.buildRobot(UnitType.MOPPER, nextLoc);
-            System.out.println("BUILT A MOPPER");
-        }
-        else if (robotType == 2 && rc.canBuildRobot(UnitType.SPLASHER, nextLoc)){
-            // rc.buildRobot(UnitType.SPLASHER, nextLoc);
-            // System.out.println("BUILT A SPLASHER");
-            rc.setIndicatorString("SPLASHER NOT IMPLEMENTED YET");
+
+        MapLocation spawnLocation = getSpawnLocation(rc);
+        try{
+            rc.buildRobot(SPAWN_TYPE, spawnLocation);
+        }catch(GameActionException e){
+            // we dont need to build robots
         }
 
         // Read incoming messages
@@ -37,5 +28,18 @@ public class Tower {
         }
 
         // TODO: can we attack other bots?
+    }
+
+    static MapLocation getSpawnLocation(RobotController rc) throws GameActionException {
+        for(Direction dir : Utils.directions){
+            MapLocation nextLoc = rc.getLocation().add(dir).add(dir);
+            if (!rc.canBuildRobot(UnitType.SOLDIER, nextLoc)) {
+                nextLoc = nextLoc.subtract(dir);
+                rc.canBuildRobot(UnitType.SOLDIER, nextLoc);
+            }
+            return nextLoc;
+        }
+
+        throw new GameActionException(GameActionExceptionType.CANT_DO_THAT, "cannot spawn any units nearby");
     }
 }

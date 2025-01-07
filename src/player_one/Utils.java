@@ -14,6 +14,7 @@ public class Utils {
      */
     public static final Random rng = new Random(6147);
 
+
     /** Array containing all the possible movement directions. */
     public static final Direction[] directions = {
             Direction.NORTH,
@@ -25,6 +26,8 @@ public class Utils {
             Direction.WEST,
             Direction.NORTHWEST,
     };
+
+
 
     public static void updateEnemyRobots(RobotController rc) throws GameActionException {
         // Sensing methods can be passed in a radius of -1 to automatically
@@ -47,6 +50,43 @@ public class Utils {
                 }
             }
         }
+    }
+
+
+
+    public static Direction moveTowards(RobotController rc, MapLocation target) throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+        Direction directionTowardsTarget = currentLocation.directionTo(target);
+        if(rc.canMove(directionTowardsTarget)){
+            rc.move(directionTowardsTarget);
+        } else {
+            int attempts = 0;
+            while(attempts < 8){
+                directionTowardsTarget = directionTowardsTarget.rotateRight();
+                if(rc.canMove(directionTowardsTarget)){
+                    rc.move(directionTowardsTarget);
+                    return directionTowardsTarget;
+                }
+                attempts++;
+            }
+        }
+
+        throw new GameActionException(GameActionExceptionType.CANT_DO_THAT, "I'm stuck :(");
+    }
+
+    public static RobotInfo getClosestRobot(RobotController rc, RobotInfo[] robots) throws GameActionException{
+        MapLocation currentLocation = rc.getLocation();
+        RobotInfo currentClosestRobot = null;
+        int currentDistance = Integer.MAX_VALUE;
+        for(RobotInfo robot : robots){
+            MapLocation robotLocation = robot.location;
+            int distance = currentLocation.distanceSquaredTo(robotLocation);
+            if(distance < currentDistance){
+                currentClosestRobot = robot;
+                currentDistance = distance;
+            }
+        }
+        return currentClosestRobot;
     }
 
 

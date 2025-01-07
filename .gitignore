@@ -3,6 +3,8 @@
 .gradle
 **/build/
 !src/**/build/
+client
+matches
 
 # Ignore Gradle GUI config
 gradle-app.setting
