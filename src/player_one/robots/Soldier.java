@@ -1,6 +1,7 @@
 package player_one.robots;
 
 import battlecode.common.*;
+import player_one.TowerPatterns;
 import player_one.Utils;
 
 import static player_one.Utils.directions;
@@ -27,27 +28,41 @@ public class Soldier {
 
         if (curRuin != null){
             MapLocation targetLoc = curRuin.getMapLocation();
-            Direction movementDirection = Utils.moveTowards(rc, targetLoc);
+            MapInfo[] tilesToPaint = rc.senseNearbyMapInfos(targetLoc, 8);
 
-            // Mark the pattern we need to draw to build a tower here if we haven't already.
-            MapLocation shouldBeMarked = curRuin.getMapLocation().subtract(movementDirection);
-            if (rc.senseMapInfo(shouldBeMarked).getMark() == PaintType.EMPTY && rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLoc)){
-                rc.markTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLoc);
-                System.out.println("Trying to build a tower at " + targetLoc);
-            }
+
+            boolean iThinkPatternIsFinished = true;
             // Fill in any spots in the pattern with the appropriate paint.
-            for (MapInfo patternTile : rc.senseNearbyMapInfos(targetLoc, 8)){
-                if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
-                    boolean useSecondaryColor = patternTile.getMark() == PaintType.ALLY_SECONDARY;
-                    if (rc.canAttack(patternTile.getMapLocation()))
-                        rc.attack(patternTile.getMapLocation(), useSecondaryColor);
+            for (MapInfo patternTile : tilesToPaint){
+                MapLocation patternTileLocation = patternTile.getMapLocation();
+                int x = targetLoc.x - patternTileLocation.x + 2;
+                int y = targetLoc.y - patternTileLocation.y + 2;
+                PaintType intendedPaintValue = TowerPatterns.LEVEL_ONE_PAINT_TOWER_PATTERN[x][y];
+                if(intendedPaintValue == PaintType.EMPTY){
+                    continue;
+                }
+                PaintType actualPaintValue = patternTile.getPaint();
+                if (intendedPaintValue != actualPaintValue){
+
+                    boolean useSecondaryColor = intendedPaintValue == PaintType.ALLY_SECONDARY;
+                    if (rc.canAttack(patternTileLocation)){
+                        rc.attack(patternTileLocation, useSecondaryColor);
+                    } else {
+                        Utils.moveTowards(rc, patternTileLocation);
+                    }
+                    iThinkPatternIsFinished = false;
+                    break;
                 }
             }
+
+
             // Complete the ruin if we can.
-            if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLoc)){
+            if (iThinkPatternIsFinished && rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLoc)){
                 rc.completeTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLoc);
                 rc.setTimelineMarker("Tower built", 0, 255, 0);
                 System.out.println("Built a tower at " + targetLoc + "!");
+            } else {
+                Utils.moveTowards(rc, targetLoc);
             }
         } else if(enemyRobots.length > 0) {
             RobotInfo closestEnemyRobot = Utils.getClosestRobot(rc, enemyRobots);

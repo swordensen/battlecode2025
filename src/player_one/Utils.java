@@ -90,4 +90,28 @@ public class Utils {
     }
 
 
+
+    public static void tryToCompleteLevel1Towers(RobotController rc, MapLocation targetLocation) throws GameActionException{
+        if(rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation)){
+            rc.completeTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation);
+        }else if(rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, targetLocation)){
+            rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, targetLocation);
+        }else if(rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_DEFENSE_TOWER, targetLocation)){
+            rc.completeTowerPattern(UnitType.LEVEL_ONE_DEFENSE_TOWER, targetLocation);
+        }
+    }
+
+    public static void tryToCompleteResourcePattern(RobotController rc, MapLocation targetLocation) throws GameActionException{
+        if(rc.canCompleteResourcePattern(targetLocation)){
+            rc.completeResourcePattern(targetLocation);
+        }
+    }
+
+
+
+
+
+
+
+
 }
