@@ -5,7 +5,9 @@ import battlecode.common.*;
 
 import java.util.*;
 
-import static player_one.Utils.directions;
+import static player_one.MAP_DATA.NOT_VISITED;
+import static player_one.MAP_DATA.VISITED;
+import static player_one.Utils.*;
 
 class Node implements Comparable<Node> {
     MapLocation location;
@@ -34,22 +36,26 @@ class Node implements Comparable<Node> {
     static final double DIAGONAL_STEP_COST = 1.414;
     static final double STEP_COST = 1;
 
+
     static double heuristic(MapLocation currentLocation, MapLocation targetLocation){
         int dx = Math.abs(currentLocation.x - targetLocation.x);
         int dy = Math.abs(currentLocation.y - targetLocation.y);
         return STEP_COST * (dx + dy) + (DIAGONAL_STEP_COST - 2 * STEP_COST) * Math.min(dx, dy);
     }
 
-    static List<Node> getNeighbors(Node node, int mapWidth, int mapHeight, RobotController rc) throws GameActionException {
+    static List<Node> getNeighbors(Node node) throws GameActionException {
         List<Node> neighbors = new ArrayList<>();
 
         for(Direction dir: directions){
             MapLocation nextLoc = node.location.add(dir);
-            if(nextLoc.x >= 0 && nextLoc.x < mapWidth && nextLoc.y >= 0 && nextLoc.y < mapHeight ){
-                boolean isPassable = rc.canSenseLocation(nextLoc) ? rc.senseMapInfo(nextLoc).isPassable() : true;
-                if(isPassable){
-                    neighbors.add(new Node(nextLoc, node.g + 1, 0, null));
-                }
+            if(nextLoc.x >= 0 && nextLoc.x < MAP_WIDTH && nextLoc.y >= 0 && nextLoc.y < MAP_HEIGHT ){
+
+
+                    if (!isLocationBlocked(nextLoc)) {
+                        neighbors.add(new Node(nextLoc, node.g + 1, 0, null));
+                    }
+
+
             }
         }
         return neighbors;
@@ -65,12 +71,9 @@ class Node implements Comparable<Node> {
         return startLocation;
     }
 
-    public static MapLocation astar( MapLocation start, MapLocation target, RobotController rc) throws GameActionException{
+    public static MapLocation astar( MapLocation start, MapLocation target) throws GameActionException{
         PriorityQueue<Node> openList = new PriorityQueue<>();
         Map<String,Node> allNodes = new HashMap<>();
-
-        int mapWidth = rc.getMapWidth();
-        int mapHeight = rc.getMapHeight();
 
         Node startNode = new Node(start, 0 , heuristic(start, target), null);
         openList.add(startNode);
@@ -80,11 +83,11 @@ class Node implements Comparable<Node> {
 
             Node current = openList.poll();
 
-            if(current.location.equals(target) || Clock.getBytecodeNum() > 10000){
+            if(current.location.isAdjacentTo(target) || Clock.getBytecodeNum() > 10000){
                 return getNextLocation(current, start);
             }
 
-            for(Node neighbor : getNeighbors(current, mapWidth, mapHeight,rc)){
+            for(Node neighbor : getNeighbors(current)){
                 neighbor.h = heuristic(neighbor.location, target);
                 neighbor.parent = current;
                 String key = neighbor.location.toString();

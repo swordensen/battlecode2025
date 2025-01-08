@@ -1,8 +1,22 @@
 package player_one;
 
 import battlecode.common.*;
+import battlecode.schema.RobotType;
 
+import java.awt.*;
 import java.util.Random;
+
+import static player_one.MAP_DATA.NOT_VISITED;
+import static player_one.MAP_DATA.VISITED;
+
+enum MAP_DATA {
+    NOT_VISITED,
+    VISITED,
+    WALL,
+    RUIN
+}
+
+
 
 public class Utils {
 
@@ -13,6 +27,18 @@ public class Utils {
      * we get the same sequence of numbers every time this code is run. This is very useful for debugging!
      */
     public static final Random rng = new Random(6147);
+    public static int MAP_HEIGHT = 0;
+    public static int MAP_WIDTH = 0;
+
+    public static int[][] MAP_GRID = null;
+    public static int[][] ROBOT_MAP_GRID = null;
+
+    public static RobotInfo[] NEARBY_ROBOTS = null;
+    public static MapInfo[] NEARBY_MAP_INFOS = null;
+
+    public static MapLocation CURRENT_MAP_LOCATION = null;
+
+    public static int CURRENT_PAINT_STASH = 0;
 
 
     /** Array containing all the possible movement directions. */
@@ -26,6 +52,48 @@ public class Utils {
             Direction.WEST,
             Direction.NORTHWEST,
     };
+
+    public static void initializeMapGrid(RobotController rc){
+        MAP_HEIGHT = rc.getMapHeight();
+        MAP_WIDTH = rc.getMapWidth();
+        MAP_GRID = new int[MAP_WIDTH][MAP_HEIGHT];
+    }
+
+    public static void senseNearby(RobotController rc){
+        ROBOT_MAP_GRID = new int[MAP_WIDTH][MAP_HEIGHT];
+        NEARBY_ROBOTS = rc.senseNearbyRobots();
+        NEARBY_MAP_INFOS = rc.senseNearbyMapInfos();
+        CURRENT_MAP_LOCATION = rc.getLocation();
+        CURRENT_PAINT_STASH = rc.getPaint();
+        for(MapInfo mapInfo : NEARBY_MAP_INFOS){
+            MapLocation mapLocation = mapInfo.getMapLocation();
+            if(MAP_GRID[mapLocation.x][mapLocation.y] == MAP_DATA.NOT_VISITED.ordinal()){
+                if(mapInfo.isWall()){
+                    MAP_GRID[mapLocation.x][mapLocation.y] = MAP_DATA.WALL.ordinal();
+                } else if(mapInfo.hasRuin()){
+                    MAP_GRID[mapLocation.x][mapLocation.y] = MAP_DATA.RUIN.ordinal();
+                } else {
+                    MAP_GRID[mapLocation.x][mapLocation.y] = MAP_DATA.VISITED.ordinal();
+                }
+            }
+        }
+
+        for(RobotInfo robotInfo : NEARBY_ROBOTS){
+            MapLocation mapLocation = robotInfo.location;
+//            we have to add 1 here because the soldier robot type ordinal is 0 which is default
+            ROBOT_MAP_GRID[mapLocation.x][mapLocation.y] = robotInfo.getType().ordinal() + 1;
+        }
+    }
+
+    public static boolean isLocationBlocked(MapLocation location){
+        int mapGridValue = MAP_GRID[location.x][location.y];
+
+        if(mapGridValue == VISITED.ordinal() || mapGridValue == NOT_VISITED.ordinal()){
+            int robotMapGridValue = ROBOT_MAP_GRID[location.x][location.y];
+            return robotMapGridValue != 0;
+        }
+        return true;
+    }
 
 
 
@@ -54,16 +122,16 @@ public class Utils {
 
 
 
-    public static Direction moveTowards(RobotController rc, MapLocation target) throws GameActionException {
+    public static void moveTowards(RobotController rc, MapLocation target) throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
-        MapLocation nextStep = AStar.astar(currentLocation, target, rc);
+        MapLocation nextStep = AStar.astar(currentLocation, target);
         Direction directionTowardsTarget = currentLocation.directionTo(nextStep);
 
         if(rc.canMove(directionTowardsTarget)){
             rc.move(directionTowardsTarget);
         }
 
-        throw new GameActionException(GameActionExceptionType.CANT_DO_THAT, "I'm stuck :(");
+
     }
 
     public static RobotInfo getClosestRobot(RobotController rc, RobotInfo[] robots) throws GameActionException{
@@ -83,21 +151,8 @@ public class Utils {
 
 
 
-    public static void tryToCompleteLevel1Towers(RobotController rc, MapLocation targetLocation) throws GameActionException{
-        if(rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation)){
-            rc.completeTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation);
-        }else if(rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, targetLocation)){
-            rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, targetLocation);
-        }else if(rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_DEFENSE_TOWER, targetLocation)){
-            rc.completeTowerPattern(UnitType.LEVEL_ONE_DEFENSE_TOWER, targetLocation);
-        }
-    }
 
-    public static void tryToCompleteResourcePattern(RobotController rc, MapLocation targetLocation) throws GameActionException{
-        if(rc.canCompleteResourcePattern(targetLocation)){
-            rc.completeResourcePattern(targetLocation);
-        }
-    }
+
 
 
 

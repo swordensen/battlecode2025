@@ -7,6 +7,9 @@ import player_one.robots.Tower;
 
 import java.util.Random;
 
+import static player_one.Utils.initializeMapGrid;
+import static player_one.Utils.senseNearby;
+
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -20,20 +23,19 @@ public class RobotPlayer {
      * these variables are static, in Battlecode they aren't actually shared between your robots.
      */
     static int turnCount = 0;
-
-
-
+    static int[][] MAP_GRID = null;
 
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * It is like the main function for your robot. If this method returns, the robot dies!
      *
-     * @param rc  The RobotController object. You use it to perform actions from this robot, and to get
-     *            information on its current status. Essentially your portal to interacting with the world.
+     * @param rc The RobotController object. You use it to perform actions from this robot, and to get
+     *           information on its current status. Essentially your portal to interacting with the world.
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
+        initializeMapGrid(rc);
         // Hello world! Standard output is very useful for debugging.
         // Everything you say here will be directly viewable in your terminal when you run a match!
         System.out.println("I'm alive");
@@ -42,6 +44,7 @@ public class RobotPlayer {
         rc.setIndicatorString("Hello world!");
 
         while (true) {
+            senseNearby(rc);
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
             // loop. If we ever leave this loop and return from run(), the robot dies! At the end of the
             // loop, we call Clock.yield(), signifying that we've done everything we want to do.
@@ -54,11 +57,18 @@ public class RobotPlayer {
                 // different types. Here, we separate the control depending on the UnitType, so we can
                 // use different strategies on different robots. If you wish, you are free to rewrite
                 // this into a different control structure!
-                switch (rc.getType()){
-                    case SOLDIER: Soldier.run(rc); break;
-                    case MOPPER: Mopper.run(rc); break;
-                    case SPLASHER: break; // Consider upgrading examplefuncsplayer to use splashers
-                    default: Tower.run(rc); break;
+                switch (rc.getType()) {
+                    case SOLDIER:
+                        Soldier.run(rc);
+                        break;
+                    case MOPPER:
+                        Mopper.run(rc);
+                        break;
+                    case SPLASHER:
+                        break; // Consider upgrading examplefuncsplayer to use splashers
+                    default:
+                        Tower.run(rc);
+                        break;
                 }
             } catch (GameActionException e) {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should
@@ -83,14 +93,6 @@ public class RobotPlayer {
 
         // Your code should never reach here (unless it's intentional)! Self-destruction imminent...
     }
-
-
-
-
-
-
-
-
 
 
 }
