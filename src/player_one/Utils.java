@@ -56,19 +56,11 @@ public class Utils {
 
     public static Direction moveTowards(RobotController rc, MapLocation target) throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
-        Direction directionTowardsTarget = currentLocation.directionTo(target);
+        MapLocation nextStep = AStar.astar(currentLocation, target, rc);
+        Direction directionTowardsTarget = currentLocation.directionTo(nextStep);
+
         if(rc.canMove(directionTowardsTarget)){
             rc.move(directionTowardsTarget);
-        } else {
-            int attempts = 0;
-            while(attempts < 8){
-                directionTowardsTarget = directionTowardsTarget.rotateRight();
-                if(rc.canMove(directionTowardsTarget)){
-                    rc.move(directionTowardsTarget);
-                    return directionTowardsTarget;
-                }
-                attempts++;
-            }
         }
 
         throw new GameActionException(GameActionExceptionType.CANT_DO_THAT, "I'm stuck :(");

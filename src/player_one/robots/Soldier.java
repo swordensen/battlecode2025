@@ -48,6 +48,7 @@ public class Soldier {
                     if (rc.canAttack(patternTileLocation)){
                         rc.attack(patternTileLocation, useSecondaryColor);
                     } else {
+
                         Utils.moveTowards(rc, patternTileLocation);
                     }
                     iThinkPatternIsFinished = false;
