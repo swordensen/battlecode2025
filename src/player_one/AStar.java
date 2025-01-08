@@ -49,13 +49,9 @@ class Node implements Comparable<Node> {
         for(Direction dir: directions){
             MapLocation nextLoc = node.location.add(dir);
             if(nextLoc.x >= 0 && nextLoc.x < MAP_WIDTH && nextLoc.y >= 0 && nextLoc.y < MAP_HEIGHT ){
-
-
-                    if (!isLocationBlocked(nextLoc)) {
-                        neighbors.add(new Node(nextLoc, node.g + 1, 0, null));
-                    }
-
-
+                if (!isLocationBlocked(nextLoc)) {
+                    neighbors.add(new Node(nextLoc, node.g + 1, 0, null));
+                }
             }
         }
         return neighbors;
@@ -83,7 +79,7 @@ class Node implements Comparable<Node> {
 
             Node current = openList.poll();
 
-            if(current.location.isAdjacentTo(target) || Clock.getBytecodeNum() > 10000){
+            if(current.location.equals(target) || Clock.getBytecodeNum() > 10000){
                 return getNextLocation(current, start);
             }
 

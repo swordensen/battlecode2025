@@ -3,7 +3,7 @@ package player_one.robots;
 import battlecode.common.*;
 import player_one.Utils;
 
-import static player_one.Utils.rng;
+import static player_one.Utils.*;
 
 public class Tower {
 
@@ -20,6 +20,8 @@ public class Tower {
         }catch(GameActionException e){
             // we dont need to build robots
         }
+
+
 
         // Read incoming messages
         Message[] messages = rc.readMessages(-1);

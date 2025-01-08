@@ -1,21 +1,21 @@
 package player_one.robots;
 
 import battlecode.common.*;
+import player_one.Movable;
 import player_one.TowerPatterns;
 import player_one.Utils;
 
 import static player_one.Utils.*;
 
 
-public class Soldier {
-    static MapLocation target = null;
+public class Soldier  {
     /**
      * Run a single turn for a Soldier.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
     public static void run(RobotController rc) throws GameActionException {
+
         // Sense information about all visible nearby tiles.
-        checkTarget();
         MapInfo[] nearbyTiles = NEARBY_MAP_INFOS;
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
         // Search for a nearby ruin to complete.
@@ -53,7 +53,7 @@ public class Soldier {
                             rc.attack(patternTileLocation, useSecondaryColor);
                         } else {
 
-                            setTarget(patternTileLocation);
+                            Movable.setDestination(patternTileLocation);
                         }
                         iThinkPatternIsFinished = false;
                         break;
@@ -69,7 +69,7 @@ public class Soldier {
                 }
             } else if (enemyRobots.length > 0) {
                 RobotInfo closestEnemyRobot = Utils.getClosestRobot(rc, enemyRobots);
-                setTarget(closestEnemyRobot.location);
+                Movable.setDestination(closestEnemyRobot.location);
                 if (rc.canAttack(closestEnemyRobot.location)) {
                     rc.attack(closestEnemyRobot.location);
                 }
@@ -85,56 +85,32 @@ public class Soldier {
                 }
 
                 if (nearbyPaintableTile != null) {
-                    setTarget(nearbyPaintableTile);
+                    Movable.setDestination(nearbyPaintableTile);
 
                     if (rc.canAttack(nearbyPaintableTile)) {
                         rc.attack(nearbyPaintableTile);
                     }
                 }
             }
-            if(target != null){
-                Utils.moveTowards(rc, target);
-            } else {
-                moveAndAttackRandomly(rc);
 
+            if(!Movable.hasDestination()){
+                Direction dir = directions[rng.nextInt(directions.length)];
+                Movable.setDestination(CURRENT_MAP_LOCATION.add(dir));
             }
+
+
+            Movable.moveTowardsDestination(rc);
 
         } catch (GameActionException e) {
             e.printStackTrace();
-            moveAndAttackRandomly(rc);
         }
-        if(target != null){
-            rc.setIndicatorLine(CURRENT_MAP_LOCATION, target, 0, 255, 0);
-        }
+
 
     }
 
-    public static void setTarget(MapLocation newTarget){
-        if(target == null){
-            target = newTarget;
-        }
-    }
 
-    public static void clearTarget(){
-        target = null;
-    }
 
-    public static void checkTarget(){
-        if(target != null && CURRENT_MAP_LOCATION.isAdjacentTo(target)){
-            clearTarget();
-        }
-    }
 
-    public static void moveAndAttackRandomly(RobotController rc) throws GameActionException {
-        Direction dir = directions[rng.nextInt(directions.length)];
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-        }
-        // Try to paint beneath us as we walk to avoid paint penalties.
-        // Avoiding wasting paint by re-painting our own tiles.
-        MapInfo currentTile = rc.senseMapInfo(rc.getLocation());
-        if (currentTile.getPaint() == PaintType.EMPTY && rc.canAttack(rc.getLocation())) {
-            rc.attack(rc.getLocation());
-        }
-    }
+
+
 }

@@ -3,7 +3,7 @@ package player_one;
 import battlecode.common.*;
 import battlecode.schema.RobotType;
 
-import java.awt.*;
+import java.util.HashMap;
 import java.util.Random;
 
 import static player_one.MAP_DATA.NOT_VISITED;
@@ -13,7 +13,9 @@ enum MAP_DATA {
     NOT_VISITED,
     VISITED,
     WALL,
-    RUIN
+    RUIN,
+    FRIENDLY_TOWER,
+    ENEMY_TOWER
 }
 
 
@@ -39,7 +41,8 @@ public class Utils {
     public static MapLocation CURRENT_MAP_LOCATION = null;
 
     public static int CURRENT_PAINT_STASH = 0;
-
+    public static Team MY_TEAM = null;
+    public static HashMap<Integer, MapLocation> REFILL_TOWERS = new HashMap<Integer, MapLocation>();
 
     /** Array containing all the possible movement directions. */
     public static final Direction[] directions = {
@@ -57,6 +60,7 @@ public class Utils {
         MAP_HEIGHT = rc.getMapHeight();
         MAP_WIDTH = rc.getMapWidth();
         MAP_GRID = new int[MAP_WIDTH][MAP_HEIGHT];
+        MY_TEAM = rc.getTeam();
     }
 
     public static void senseNearby(RobotController rc){
@@ -72,8 +76,6 @@ public class Utils {
                     MAP_GRID[mapLocation.x][mapLocation.y] = MAP_DATA.WALL.ordinal();
                 } else if(mapInfo.hasRuin()){
                     MAP_GRID[mapLocation.x][mapLocation.y] = MAP_DATA.RUIN.ordinal();
-                } else {
-                    MAP_GRID[mapLocation.x][mapLocation.y] = MAP_DATA.VISITED.ordinal();
                 }
             }
         }
@@ -82,13 +84,18 @@ public class Utils {
             MapLocation mapLocation = robotInfo.location;
 //            we have to add 1 here because the soldier robot type ordinal is 0 which is default
             ROBOT_MAP_GRID[mapLocation.x][mapLocation.y] = robotInfo.getType().ordinal() + 1;
+            if(robotInfo.type == UnitType.LEVEL_ONE_PAINT_TOWER && robotInfo.team == MY_TEAM){
+                if(REFILL_TOWERS.containsKey(robotInfo.getID())){
+                    REFILL_TOWERS.
+                }
+            }
         }
     }
 
     public static boolean isLocationBlocked(MapLocation location){
         int mapGridValue = MAP_GRID[location.x][location.y];
 
-        if(mapGridValue == VISITED.ordinal() || mapGridValue == NOT_VISITED.ordinal()){
+        if(mapGridValue == 0){
             int robotMapGridValue = ROBOT_MAP_GRID[location.x][location.y];
             return robotMapGridValue != 0;
         }
